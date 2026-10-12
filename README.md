@@ -32,6 +32,7 @@
 ├── Week04/                 # 第 4 周
 ├── Week05/                 # 第 5 周
 ├── week05_pendulum_sim/    # ⭐ 第 5 周实验工作区（单摆 / 双摆混沌）
+│   ├── CHANGELOG.md        #    提交历史台账
 │   ├── simulations/        #    3 个交互模拟器（HTML）
 │   └── reflections/        #    人机协同三反思.docx
 ├── Week06/                 # 第 6 周
@@ -53,6 +54,7 @@
 |------|------|
 | 仓库根目录 | https://github.com/CCCOO2/course-portfolio |
 | 第 5 周实验工作区 | https://github.com/CCCOO2/course-portfolio/tree/main/week05_pendulum_sim |
+| 第 5 周提交台账 | https://github.com/CCCOO2/course-portfolio/blob/main/week05_pendulum_sim/CHANGELOG.md |
 | 第 5 周提交历史 | https://github.com/CCCOO2/course-portfolio/commits/main/week05_pendulum_sim |
 
 ---

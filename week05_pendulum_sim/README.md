@@ -18,6 +18,7 @@
 | 本实验工作区目录 | https://github.com/CCCOO2/course-portfolio/tree/main/week05_pendulum_sim |
 | 交互模拟器目录 | https://github.com/CCCOO2/course-portfolio/tree/main/week05_pendulum_sim/simulations |
 | 反思报告目录 | https://github.com/CCCOO2/course-portfolio/tree/main/week05_pendulum_sim/reflections |
+| 提交历史台账 CHANGELOG | https://github.com/CCCOO2/course-portfolio/blob/main/week05_pendulum_sim/CHANGELOG.md |
 | 提交历史 | https://github.com/CCCOO2/course-portfolio/commits/main/week05_pendulum_sim |
 
 ---
@@ -74,6 +75,7 @@
 ```
 week05_pendulum_sim/
 ├── README.md                                    # 本文件：实验说明与产物索引
+├── CHANGELOG.md                                 # 提交历史台账（三阶段分组）
 ├── params.toml                                  # 实验参数配置
 ├── pendulum_sim.py                              # 单摆周期模拟脚本
 ├── RESULTS.md                                   # 实验结果记录
@@ -87,20 +89,10 @@ week05_pendulum_sim/
 
 ---
 
-## 📜 Git 提交历史（基线记录）
+## 📜 Git 提交历史
 
-| 哈希 | 提交信息 | 归档内容 |
-|------|----------|----------|
-| `4742ad9` | `fix(week05): inline kobe image as base64 to remove broken assets dependency` | 双摆模拟器图片改内嵌，修复外部依赖缺陷 |
-| `beb49e9` | `docs(week05): add repo links, tree and commit baseline to READMEs` | README 仓库链接、目录树、基线记录 |
-| `5171d0b` | `docs(week05): index archived simulations and reflection report in README` | README 产物索引 |
-| `a503622` | `docs(week05): archive human-AI collaboration reflection report` | Word 反思报告 |
-| `ce7b940` | `feat(week05): add interactive pendulum and double-pendulum chaos simulations` | 3 个 HTML 模拟器 |
-| `d7ad1dc` | `test(week05): archive simulation results and update workspace status` | 结果记录 + 状态 |
-| `48a2c3c` | `feat(week05): add pendulum simulation script` | 模拟脚本 |
-| `241e3fb` | `docs(week05): add experiment parameter configuration` | 参数配置 |
-| `e350f4a` | `feat(week05): init pendulum experiment workspace` | 工作区初始化 |
+完整提交台账已迁至独立文件 **[CHANGELOG.md](CHANGELOG.md)**，按「工作区搭建 → 交付物归档 → 缺陷修复」三阶段分组，含修复记录与验收校验表。
 
-**基线状态：** 分支 `main` 与 `origin/main` 已同步，工作树干净（`working tree clean`）。
+**当前基线：** 分支 `main` 与 `origin/main` 已同步，工作树干净（`working tree clean`）。
 
-> 💡 本表已完整覆盖 `e350f4a` 至 `4742ad9` 的全部 9 次提交。再往后的提交（含为补全本表而做的那一次）请以上方「提交历史」链接中的实时 `git log` 为准——Commit 哈希只能在提交完成后才存在，无法预先写入自身。
+> 💡 拆出 CHANGELOG 的原因：任何文件都无法写入"本次提交自己的"哈希（哈希由提交内容算出）。CHANGELOG 按惯例在下一次改动时补写上一条记录，因此可随时间收敛到完整；实时无遗漏列表见[提交记录](https://github.com/CCCOO2/course-portfolio/commits/main/week05_pendulum_sim)。

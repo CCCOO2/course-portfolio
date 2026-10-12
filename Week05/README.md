@@ -58,6 +58,8 @@ Week05/
 |------|----------|------|
 | `c0f2f1a` | `🎉 初始提交：创建课程作品集仓库` | 建立 Week01–Week16 目录脚手架（含 Week05） |
 | `7ba0d2b` | `chore(week05): clear pendulum experiment workspace per user request` | 移除 `week05_pendulum_sim/` 工作区，重建 `Week05/` 并归档反思文档 |
+| `484b3e9` | `docs(week05): add GitHub links, commit ledger and submission notes to Week05 README` | 本 README 增加 GitHub 链接表、提交台账与提交包说明 |
+| `468c098` | `chore(repo): ignore zip submission packages` | `.gitignore` 排除 `*.zip`，提交包不入库 |
 
 **目录沿革：** 第 5 周先前另有一个独立实验工作区 `week05_pendulum_sim/`（单摆/双摆模拟，11 次提交），已按本人要求于提交 `7ba0d2b` 中移除，其历史完整保留在仓库中，可随时取回：
 

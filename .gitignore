@@ -32,3 +32,6 @@ npm-debug.log*
 # ===== Misc =====
 *.log
 .env
+
+# ===== Submission packages (never versioned: would embed the repo in itself) =====
+*.zip

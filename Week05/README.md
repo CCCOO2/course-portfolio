@@ -60,6 +60,7 @@ Week05/
 | `7ba0d2b` | `chore(week05): clear pendulum experiment workspace per user request` | 移除 `week05_pendulum_sim/` 工作区，重建 `Week05/` 并归档反思文档 |
 | `484b3e9` | `docs(week05): add GitHub links, commit ledger and submission notes to Week05 README` | 本 README 增加 GitHub 链接表、提交台账与提交包说明 |
 | `468c098` | `chore(repo): ignore zip submission packages` | `.gitignore` 排除 `*.zip`，提交包不入库 |
+| `2394844` | `docs(week05): backfill commit ledger with README and gitignore entries` | 台账补入上两条哈希，形成完整 Week05 提交链 |
 
 **目录沿革：** 第 5 周先前另有一个独立实验工作区 `week05_pendulum_sim/`（单摆/双摆模拟，11 次提交），已按本人要求于提交 `7ba0d2b` 中移除，其历史完整保留在仓库中，可随时取回：
 
@@ -73,7 +74,10 @@ git checkout 6b73147 -- week05_pendulum_sim
 
 ## 📦 提交说明
 
-- 提交包：`Week05_Lab_7903126023夏尚晨.zip`，由本仓库导出，内含完整 `.git/` 提交历史。
+- 提交包：`Week05_Lab_7903126023夏尚晨.zip`（4,755,994 字节 ≈ 4.5 MB），解压后得到同名文件夹。
+- 包内为该 Git 仓库的**完整快照**：`README.md`、`Week01`–`Week16` 目录、`.gitignore`、隐藏目录 `.git/`（完整提交历史）。
+- 之所以带整个仓库而不是只有 `Week05/`：`.git/` 记录的是一套完整文件树，单独抽出 `Week05/` 会让 Git 认为其他文件被误删、`git status` 一片红；连同整棵树打包，老师解压后 `git log` 才能正常运行。
+- 解压后校验方式：在文件夹内执行 `git log --oneline -- Week05`，应看到 4 条记录（见上方台账）。
 - 压缩包不纳入版本管理（`.gitignore` 已排除 `*.zip`），避免仓库自我嵌套。
 - 远端同步：`git push origin main`，与 https://github.com/CCCOO2/course-portfolio 保持一致。
 

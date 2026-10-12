@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>单摆模拟器 - 练习3: 找出重置按钮的 bug</title>
+<style>
+  html, body { margin: 0; background: #1a1a24; overflow: hidden; font-family: "Consolas", monospace; }
+  #hud { position: fixed; top: 16px; left: 16px; color: #7fdcff; font-size: 13px; line-height: 1.7; }
+  #panel { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); }
+  #resetBtn {
+    padding: 9px 18px; background: rgba(13, 71, 161, 0.55); color: #bfeaff;
+    border: 1px solid rgba(127, 220, 255, 0.45); border-radius: 8px; font-size: 12px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div id="hud"></div>
+<div id="panel">
+  <!-- 修复: 去掉内联 onclick。内联处理器在"全局作用域"编译,
+       看不见 IIFE 闭包内的 resetAnimation → ReferenceError。
+       改为在闭包内部用 addEventListener 绑定, 处理器与函数同处一个作用域 -->
+  <button id="resetBtn">重置摆动</button>
+</div>
+<script>
+(function () {
+  'use strict';
+
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const hud = document.getElementById('hud');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const THETA0 = 45 * Math.PI / 180;
+  const L = 200, G = 9.8, LM = 2;
+
+  let theta = THETA0, omega = 0, simTime = 0, lastTs = null;
+
+  // 这个函数是 IIFE 的"私有"函数, 现在由同处闭包内的
+  // addEventListener 处理器调用, 作用域畅通
+  function resetAnimation() {
+    theta = THETA0;
+    omega = 0;
+    simTime = 0;
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', resetAnimation);
+
+  function frame(ts) {
+    if (lastTs === null) lastTs = ts;
+    let dt = Math.min((ts - lastTs) / 1000, 0.05);
+    lastTs = ts;
+    simTime += dt;
+
+    const h = dt / 4;
+    for (let i = 0; i < 4; i++) {
+      omega += (-(G / LM) * Math.sin(theta)) * h;
+      theta += omega * h;
+    }
+
+    const px = canvas.width / 2, py = canvas.height * 0.22;
+    const bx = px + L * Math.sin(theta), by = py + L * Math.cos(theta);
+
+    ctx.fillStyle = '#1a1a24';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#9ab8d8';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(bx, by); ctx.stroke();
+    const glow = ctx.createRadialGradient(bx, by, 6, bx, by, 46);
+    glow.addColorStop(0, 'rgba(0,220,255,0.45)');
+    glow.addColorStop(1, 'rgba(0,120,255,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(bx, by, 46, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#4fc3f7';
+    ctx.beginPath(); ctx.arc(bx, by, 16, 0, Math.PI * 2); ctx.fill();
+
+    hud.textContent = 'θ = ' + (theta * 180 / Math.PI).toFixed(1) + '°  t = ' + simTime.toFixed(2) + ' s';
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

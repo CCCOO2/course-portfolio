@@ -14,7 +14,7 @@
 |---|------|------|----------|----------|
 | 1 | `e350f4a` | 2026-10-12 | `feat(week05): init pendulum experiment workspace` | 创建独立工作区目录 + README 骨架 |
 | 2 | `241e3fb` | 2026-10-12 | `docs(week05): add experiment parameter configuration` | `params.toml`：摆长、重力、阻尼、温湿度 |
-| 3 | `48a2c3c` | 2026-10-12 | `feat(week05): add pendulum simulation script` | `pendulum_sim.py`：RK 数值积分单摆周期模拟 |
+| 3 | `48a2c3c` | 2026-10-12 | `feat(week05): add pendulum simulation script` | `pendulum_sim.py`：按解析公式 T = 2π√(L/g) 计算理论周期，并生成 30 次含微小扰动的模拟测量值 |
 | 4 | `d7ad1dc` | 2026-10-12 | `test(week05): archive simulation results and update workspace status` | `RESULTS.md`：理论周期 2.008 s，30 次测量均值一致 |
 
 ## 阶段二 · 交付物归档

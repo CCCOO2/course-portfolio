@@ -33,7 +33,7 @@
 | [`pendulum_sim.py`](pendulum_sim.py) | Python 脚本 | 单摆周期计算（小角度近似 T = 2π√(L/g)）与 30 次测量模拟，可直接运行 |
 | [`params.toml`](params.toml) | 配置文件 | 摆长、重力、阻尼、测量精度与环境温湿度参数 |
 | [`RESULTS.md`](RESULTS.md) | 结果记录 | 理论周期 2.008 s 与 30 次测量均值比对 |
-| [`CHANGELOG.md`](CHANGELOG.md) | 提交台账 | 本实验全部 Git 提交（21 条）逐条记录 + 缺陷修复与验收校验 |
+| [`CHANGELOG.md`](CHANGELOG.md) | 提交台账 | 本实验全部 Git 提交（逐条编号至最新）逐条记录 + 缺陷修复与验收校验 |
 | [`simulations/食质261夏尚晨-单摆简谐振动模拟器.html`](simulations/食质261夏尚晨-单摆简谐振动模拟器.html) | 交互模拟器 | 滑块可调摆长 L / 重力 g / 阻尼 c，实时显示周期与线速度 |
 | [`simulations/食质261夏尚晨-单摆重置Bug修复.html`](simulations/食质261夏尚晨-单摆重置Bug修复.html) | 缺陷修复练习 | 重置按钮 `ReferenceError` 的定位与修复（IIFE 闭包作用域问题） |
 | [`simulations/食质261夏尚晨-双摆混沌模拟器.html`](simulations/食质261夏尚晨-双摆混沌模拟器.html) | 交互模拟器 | 双摆混沌 + 相图 + 能量监测 + 火箭加速模式，含相图与头像 base64 内嵌 |
@@ -60,7 +60,7 @@
 ```
 Week05/
 ├── README.md                        # 本文件：索引与说明
-├── CHANGELOG.md                     # 提交台账（21 条）+ 修复记录 + 验收校验
+├── CHANGELOG.md                     # 提交台账（逐条编号至最新）+ 修复记录 + 验收校验
 ├── RESULTS.md                       # 实验结果记录
 ├── params.toml                      # 实验参数配置
 ├── pendulum_sim.py                  # 单摆周期模拟脚本
@@ -75,7 +75,7 @@ Week05/
 
 ## 📜 Git 提交台账
 
-完整台账（第 5 周全部 21 条提交，含缺陷修复记录与验收校验）见 [`CHANGELOG.md`](CHANGELOG.md)。本节仅记录目录迁移之后的提交：
+完整台账（第 5 周全部提交，逐条编号，含缺陷修复记录与验收校验）见 [`CHANGELOG.md`](CHANGELOG.md)。本节仅记录目录迁移之后的提交：
 
 | 哈希 | 提交信息 | 内容 |
 |------|----------|------|
@@ -87,6 +87,8 @@ Week05/
 | `aa3c94a` | `docs(week05): backfill ledger with package-related commits` | 台账补录至上一条 |
 | `c9eb897` | `feat(week05): restore pendulum simulation script and parameter configuration` | 归回 `pendulum_sim.py`、`params.toml` |
 | `55d19e4` | `feat(week05): restore interactive pendulum and double-pendulum chaos simulations` | 归回 3 份交互模拟器 HTML |
+| `7984443` | `docs(week05): restore results log, extend migration ledger and index restored artifacts` | 归回 `RESULTS.md`、`CHANGELOG.md`，README 登记全部产物 |
+| `ea3db06` | `docs(repo): reflect restored Week05 deliverables in portfolio tree` | 根目录 README 更新 Week05 产物说明 |
 
 **目录沿革：** 第 5 周起初在独立工作区 `week05_pendulum_sim/` 中开发（11 次提交），后按本人要求于 `7ba0d2b` 移除该目录、改建 `Week05/`；现实验产物已从历史提交 `6b73147` 逐字节取回归档至本目录。取回原始快照的命令：
 

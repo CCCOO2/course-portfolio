@@ -55,8 +55,10 @@
 | 19 | `aa3c94a` | 2026-10-12 | `docs(week05): backfill ledger with package-related commits` | 台账补录至第 18 条 |
 | 20 | `c9eb897` | 2026-10-12 | `feat(week05): restore pendulum simulation script and parameter configuration` | 自 `6b73147` 取回 `pendulum_sim.py`、`params.toml` |
 | 21 | `55d19e4` | 2026-10-12 | `feat(week05): restore interactive pendulum and double-pendulum chaos simulations` | 自 `6b73147` 取回 3 份交互模拟器 HTML |
+| 22 | `7984443` | 2026-10-12 | `docs(week05): restore results log, extend migration ledger and index restored artifacts` | 本文件与 `RESULTS.md` 归入 `Week05/`；README 登记全部产物、台账延至第 21 条 |
+| 23 | `ea3db06` | 2026-10-12 | `docs(repo): reflect restored Week05 deliverables in portfolio tree` | 根目录 README 的 Week05 行更新为完整产物清单（仓库级文件，一并记录） |
 
-> 第 20、21 条为迁移后的产物恢复；恢复文件与迁移前逐字节一致，本文件与 `RESULTS.md` 随第 22 条一并归入 `Week05/`。
+> 第 20–21 条为迁移后的产物恢复；恢复文件与迁移前逐字节一致。三份 HTML 归回后重新 grep 复核：外部依赖 0 处，双摆版头像仍为 base64 内嵌。`pendulum_sim.py` 归回后实跑复现：理论周期 2.008 s、30 次测量均值 2.008 s，与 `RESULTS.md` 记录一致。
 
 ---
 
@@ -89,4 +91,4 @@
 
 Git 提交哈希由提交内容计算得出，因此**任何文件都无法写入"本次提交自己的"哈希**——就像人没法把自己举起来。
 
-CHANGELOG 的惯用做法恰好化解了这点：每条记录在**下一次**改动时补写。本文件当前已记录至第 21 条（`55d19e4`）；为本次迁移与本次修订而做的提交将顺位成为第 22 条起，由本目录后续任一次提交补入——台账因此始终只落后一条，并随每次改动自动收敛到完整。实时、无遗漏的列表请见文首「本目录提交记录」链接。
+CHANGELOG 的惯用做法恰好化解了这点：每条记录在**下一次**改动时补写。本文件当前已记录至第 23 条（`ea3db06`）；写入本行的这次提交将顺位成为第 24 条，由本目录后续任一次提交补入——台账因此始终只落后一条，并随每次改动自动收敛到完整。实时、无遗漏的列表请见文首「本目录提交记录」链接。

@@ -32,6 +32,7 @@
 - [x] 实验结果已归档（RESULTS.md）
 - [x] 交互模拟器已归档（simulations/，3 份）
 - [x] 人机协同反思报告已归档（reflections/）
+- [x] 3 份模拟器均自包含（无外部资源依赖），浏览器实测控制台 0 报错
 - [ ] 无菌操作台环境就绪（待指导教师确认）
 
 ---
@@ -90,6 +91,8 @@ week05_pendulum_sim/
 
 | 哈希 | 提交信息 | 归档内容 |
 |------|----------|----------|
+| `4742ad9` | `fix(week05): inline kobe image as base64 to remove broken assets dependency` | 双摆模拟器图片改内嵌，修复外部依赖缺陷 |
+| `beb49e9` | `docs(week05): add repo links, tree and commit baseline to READMEs` | README 仓库链接、目录树、基线记录 |
 | `5171d0b` | `docs(week05): index archived simulations and reflection report in README` | README 产物索引 |
 | `a503622` | `docs(week05): archive human-AI collaboration reflection report` | Word 反思报告 |
 | `ce7b940` | `feat(week05): add interactive pendulum and double-pendulum chaos simulations` | 3 个 HTML 模拟器 |
@@ -100,4 +103,4 @@ week05_pendulum_sim/
 
 **基线状态：** 分支 `main` 与 `origin/main` 已同步，工作树干净（`working tree clean`）。
 
-> 💡 本表之后的提交（含更新本 README 的提交）请以上方「提交历史」链接中的实时 `git log` 为准——Commit 哈希只能在提交完成后才存在，无法预先写入。
+> 💡 本表已完整覆盖 `e350f4a` 至 `4742ad9` 的全部 9 次提交。再往后的提交（含为补全本表而做的那一次）请以上方「提交历史」链接中的实时 `git log` 为准——Commit 哈希只能在提交完成后才存在，无法预先写入自身。

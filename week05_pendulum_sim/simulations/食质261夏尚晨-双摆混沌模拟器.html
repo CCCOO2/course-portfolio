@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双摆混沌模拟器 · 相图与能量</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #0a0b12;
+    overflow: hidden;
+    font-family: "Consolas", "Microsoft YaHei", monospace;
+  }
+  #stage {
+    display: block;
+    margin: 0 auto;
+    cursor: grab;
+  }
+  #stage.dragging { cursor: grabbing; }
+  #hud {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    color: #7fdcff;
+    font-size: 13px;
+    line-height: 1.7;
+    text-shadow: 0 0 8px rgba(0, 200, 255, 0.35);
+    pointer-events: none;
+  }
+  #panel {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    max-width: 92vw;
+    gap: 26px;
+    padding: 14px 22px;
+    background: rgba(26, 26, 36, 0.88);
+    border: 1px solid rgba(127, 220, 255, 0.22);
+    border-radius: 10px;
+    box-shadow: 0 0 24px rgba(0, 140, 255, 0.15), inset 0 0 18px rgba(0, 140, 255, 0.05);
+    color: #9ccbe8;
+    font-size: 12px;
+    user-select: none;
+  }
+  .ctrl {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 168px;
+  }
+  .ctrl label {
+    display: flex;
+    justify-content: space-between;
+  }
+  .ctrl label output {
+    color: #7fdcff;
+    text-shadow: 0 0 6px rgba(0, 200, 255, 0.35);
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #0d47a1, #2a4a6a);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #4fc3f7;
+    border: 1.5px solid #d8f6ff;
+    box-shadow: 0 0 8px rgba(0, 200, 255, 0.6);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #4fc3f7;
+    border: 1.5px solid #d8f6ff;
+    box-shadow: 0 0 8px rgba(0, 200, 255, 0.6);
+    cursor: pointer;
+  }
+  #resetBtn {
+    padding: 9px 18px;
+    background: rgba(13, 71, 161, 0.55);
+    color: #bfeaff;
+    border: 1px solid rgba(127, 220, 255, 0.45);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, background 0.15s;
+  }
+  #resetBtn:hover {
+    background: rgba(21, 101, 191, 0.7);
+    box-shadow: 0 0 14px rgba(0, 200, 255, 0.45);
+  }
+  #resetBtn:active {
+    box-shadow: 0 0 6px rgba(0, 200, 255, 0.3) inset;
+  }
+  #boostBtn {
+    padding: 9px 18px;
+    background: rgba(130, 62, 8, 0.62);
+    color: #ffd9a0;
+    border: 1px solid rgba(255, 176, 60, 0.55);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, background 0.15s;
+  }
+  #boostBtn:hover {
+    background: rgba(170, 84, 12, 0.75);
+    box-shadow: 0 0 16px rgba(255, 150, 40, 0.55);
+  }
+  #boostBtn:active {
+    box-shadow: 0 0 8px rgba(255, 150, 40, 0.35) inset;
+  }
+  #tip {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    color: rgba(127, 220, 255, 0.55);
+    font-size: 12px;
+    text-align: right;
+    line-height: 1.6;
+    pointer-events: none;
+  }
+  #side {
+    position: fixed;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(10, 11, 18, 0.85);
+    border: 1px solid rgba(127, 220, 255, 0.22);
+    border-radius: 10px;
+    box-shadow: 0 0 24px rgba(0, 140, 255, 0.15), inset 0 0 18px rgba(0, 140, 255, 0.05);
+    cursor: crosshair;
+  }
+  #side.dragging { cursor: grabbing; }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<canvas id="side"></canvas>
+<div id="hud"></div>
+<div id="tip">拖拽摆球改变初始角度 | 松手进入混沌演化<br>拖拽右侧相图可直接设定 θ₂ 与 ω₂</div>
+<div id="panel">
+  <div class="ctrl">
+    <label>摆长 L <output id="lenVal">160 px</output></label>
+    <input type="range" id="lenSlider" min="100" max="350" step="1" value="160">
+  </div>
+  <div class="ctrl">
+    <label>重力 g <output id="gVal">9.8</output></label>
+    <input type="range" id="gSlider" min="1" max="25" step="0.1" value="9.8">
+  </div>
+  <div class="ctrl">
+    <label>阻尼 c <output id="dampVal">0.000</output></label>
+    <input type="range" id="dampSlider" min="0" max="0.010" step="0.0005" value="0">
+  </div>
+  <button id="resetBtn">重置摆动</button>
+  <button id="boostBtn">火箭加速</button>
+</div>
+<script>
+(function () {
+  'use strict';
+
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const hud = document.getElementById('hud');
+
+  const DPR = window.devicePixelRatio || 1;
+  let W = 0, H = 0;
+
+  // 科比头像素材 (圆形徽章)
+  const kobeImg = new Image();
+  kobeImg.src = 'assets/kobe.png';
+
+  // ---- 科技风黑色电路板背景 (静态层, 仅在改变窗口大小时重建) ----
+  let bgLayer = null;
+  let BG_TRACES = [];   // 走线折线表 (供动态电流脉冲)
+  let PULSES = [];      // 沿走线奔跑的发光脉冲
+  let wallDt = 0;       // 每帧墙钟时长 (拖拽暂停时脉冲仍流动)
+
+  function buildBackground() {
+    bgLayer = document.createElement('canvas');
+    bgLayer.width = W * DPR;
+    bgLayer.height = H * DPR;
+    const b = bgLayer.getContext('2d');
+    b.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    // 深黑底色 + 顶部微光
+    b.fillStyle = '#0a0b12';
+    b.fillRect(0, 0, W, H);
+    const vign = b.createRadialGradient(W / 2, H * 0.3, 60, W / 2, H / 2, Math.max(W, H) * 0.75);
+    vign.addColorStop(0, 'rgba(20, 40, 60, 0.25)');
+    vign.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    b.fillStyle = vign;
+    b.fillRect(0, 0, W, H);
+
+    // 电路走线: 从随机起点沿横/竖/45° 折线生长, 末端过孔焊盘
+    const TEAL = 'rgba(0, 210, 190, ';
+    const GOLD = 'rgba(230, 180, 60, ';
+    const BLUE = 'rgba(60, 130, 255, ';
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
+    const nTraces = Math.round(W * H / 9000);
+    const tracePts = [];
+    for (let i = 0; i < nTraces; i++) {
+      let x = Math.random() * W, y = Math.random() * H;
+      const pal = Math.random() < 0.15 ? GOLD : (Math.random() < 0.5 ? TEAL : BLUE);
+      const pts = [{ x: x, y: y }];
+      b.strokeStyle = pal + (0.05 + Math.random() * 0.09).toFixed(3) + ')';
+      b.lineWidth = 1;
+      b.beginPath();
+      b.moveTo(x, y);
+      const segs = 4 + Math.floor(Math.random() * 7);
+      let d = dirs[Math.floor(Math.random() * dirs.length)];
+      for (let s = 0; s < segs; s++) {
+        const len = 20 + Math.random() * 70;
+        x += d[0] * len; y += d[1] * len;
+        b.lineTo(x, y);
+        pts.push({ x: x, y: y });
+        // 直角/45° 换向
+        const turn = Math.random() < 0.5 ? 1 : 2;
+        d = dirs[(dirs.indexOf(d) + turn) % dirs.length];
+      }
+      b.stroke();
+      // 末端焊盘
+      b.fillStyle = pal + '0.22)';
+      b.beginPath();
+      b.arc(x, y, 1.6 + Math.random() * 1.8, 0, Math.PI * 2);
+      b.fill();
+      tracePts.push({ pts: pts, warm: pal === GOLD });
+    }
+
+    // 供动态电流脉冲使用的折线弧长表
+    BG_TRACES = tracePts.map(tp => {
+      const segLens = [];
+      let total = 0;
+      for (let i = 1; i < tp.pts.length; i++) {
+        const L = Math.hypot(tp.pts[i].x - tp.pts[i-1].x, tp.pts[i].y - tp.pts[i-1].y);
+        segLens.push(L);
+        total += L;
+      }
+      return { pts: tp.pts, segLens: segLens, total: total, warm: tp.warm };
+    });
+    PULSES = [];
+    const nPulse = Math.min(32, BG_TRACES.length);
+    for (let i = 0; i < nPulse; i++) {
+      const tr = BG_TRACES[Math.floor(Math.random() * BG_TRACES.length)];
+      if (tr.total < 30) continue;
+      PULSES.push({ tr: tr, d: Math.random() * tr.total, sp: 40 + Math.random() * 110 });
+    }
+
+    // 芯片封装: 小矩形 + 引脚
+    const nChips = Math.round(W * H / 90000);
+    for (let i = 0; i < nChips; i++) {
+      const cx = Math.random() * (W - 60) + 30, cy = Math.random() * (H - 60) + 30;
+      const cw = 16 + Math.random() * 26, ch = 10 + Math.random() * 18;
+      b.strokeStyle = 'rgba(0, 210, 190, 0.10)';
+      b.strokeRect(cx, cy, cw, ch);
+      b.beginPath();
+      for (let px2 = cx + 3; px2 < cx + cw; px2 += 5) {
+        b.moveTo(px2, cy); b.lineTo(px2, cy - 4);
+        b.moveTo(px2, cy + ch); b.lineTo(px2, cy + ch + 4);
+      }
+      b.stroke();
+    }
+
+    // 细点阵
+    b.fillStyle = 'rgba(127, 220, 255, 0.05)';
+    for (let gx = 20; gx < W; gx += 40)
+      for (let gy = 20; gy < H; gy += 40)
+        b.fillRect(gx, gy, 1.2, 1.2);
+  }
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    buildBackground();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ---- 双摆物理参数 (SI 单位, 100px = 1m) ----
+  const PX_PER_M = 100;
+  const M1 = 1.5, M2 = 1.0;                 // 摆球质量 kg
+  const TH1_0 = 90 * Math.PI / 180;         // 初始上摆角
+  const TH2_0 = 135 * Math.PI / 180;        // 初始下摆角
+
+  let L_PX = 160;            // 每杆像素长 (滑块可调)
+  let G = 9.8;               // 重力加速度
+  let DAMP = 0;              // 阻尼系数
+
+  // 状态向量 y = [θ1, ω1, θ2, ω2]
+  let Y = [TH1_0, 0, TH2_0, 0];
+
+  let simTime = 0;
+  let lastTs = null;
+  let accumulator = 0;
+  const H_STEP = 1 / 240;    // RK4 固定物理步长, 保证数值稳定
+
+  // ---- 彩虹拖尾 (两球各一条) ----
+  const TRAIL_B_MAX = 420;
+  const TRAIL_A_MAX = 150;
+  const TRAIL_B = [];
+  const TRAIL_A = [];
+  let hueCursor = 0;
+
+  // ---- 拉格朗日二阶方程 (一阶化后供 RK4 使用) ----
+  function derivs(y) {
+    const th1 = y[0], w1 = y[1], th2 = y[2], w2 = y[3];
+    const l1 = L_PX / PX_PER_M, l2 = L_PX / PX_PER_M;
+    const d = th1 - th2;
+    const cosD = Math.cos(d), sinD = Math.sin(d);
+    const den = 2 * M1 + M2 - M2 * Math.cos(2 * d);
+
+    const a1 = (-G * (2 * M1 + M2) * Math.sin(th1)
+                - M2 * G * Math.sin(th1 - 2 * th2)
+                - 2 * sinD * M2 * (w2 * w2 * l2 + w1 * w1 * l1 * cosD))
+               / (l1 * den);
+
+    const a2 = (2 * sinD * (w1 * w1 * l1 * (M1 + M2)
+                + G * (M1 + M2) * Math.cos(th1)
+                + w2 * w2 * l2 * M2 * cosD))
+               / (l2 * den);
+
+    return [w1, a1, w2, a2];
+  }
+
+  // ---- Runge-Kutta 4 阶积分 ----
+  function rk4Step(y, h) {
+    const k1 = derivs(y);
+    const y2 = y.map((v, i) => v + k1[i] * h / 2);
+    const k2 = derivs(y2);
+    const y3 = y.map((v, i) => v + k2[i] * h / 2);
+    const k3 = derivs(y3);
+    const y4 = y.map((v, i) => v + k3[i] * h);
+    const k4 = derivs(y4);
+    return y.map((v, i) => v + h / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+  }
+
+  function step(dt) {
+    accumulator += dt;
+    let guard = 0;
+    while (accumulator >= H_STEP && guard < 60) {
+      Y = rk4Step(Y, H_STEP);
+      accumulator -= H_STEP;
+      guard++;
+    }
+    if (guard >= 60) accumulator = 0; // 极端卡顿后丢弃积压, 防螺旋发散
+    // 阻尼: 每 1/60s 按 (1-c) 衰减角速度, 与帧率无关
+    if (DAMP > 0) {
+      const f = Math.pow(1 - DAMP, dt * 60);
+      Y = [Y[0], Y[1] * f, Y[2], Y[3] * f];
+    }
+    // 数值健康守卫: 若出现 NaN/Infinity 则自动复位而非放任发散
+    if (!Y.every(Number.isFinite)) {
+      Y = [TH1_0, 0, TH2_0, 0];
+      TRAIL_A.length = 0; TRAIL_B.length = 0;
+    }
+  }
+
+  // ---- 控制面板 ----
+  const lenSlider = document.getElementById('lenSlider');
+  const gSlider = document.getElementById('gSlider');
+  const dampSlider = document.getElementById('dampSlider');
+  const lenVal = document.getElementById('lenVal');
+  const gVal = document.getElementById('gVal');
+  const dampVal = document.getElementById('dampVal');
+
+  function syncPanel() {
+    L_PX = Number(lenSlider.value);
+    G = Number(gSlider.value);
+    DAMP = Number(dampSlider.value);
+    lenVal.textContent = L_PX + ' px';
+    gVal.textContent = G.toFixed(1);
+    dampVal.textContent = DAMP.toFixed(3);
+    TRAIL_A.length = 0; TRAIL_B.length = 0;
+  }
+  lenSlider.addEventListener('input', syncPanel);
+  gSlider.addEventListener('input', syncPanel);
+  dampSlider.addEventListener('input', syncPanel);
+  syncPanel();
+
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    Y = [TH1_0, 0, TH2_0, 0];
+    simTime = 0;
+    accumulator = 0;
+    TRAIL_A.length = 0; TRAIL_B.length = 0;
+    PHASE.length = 0;
+    energyMax = 1;
+  });
+
+  // ---- 火箭加速: 沿当前运动方向注入角冲量, 瞬间拉满动能 ----
+  let boostFlash = 0;
+  document.getElementById('boostBtn').addEventListener('click', function () {
+    Y[1] += (Y[1] >= 0 ? 1 : -1) * 9;    // 上杆冲量 rad/s
+    Y[3] += (Y[3] >= 0 ? 1 : -1) * 14;   // 下杆冲量 rad/s (更猛)
+    boostFlash = 1;
+  });
+
+  // ---- 几何 ----
+  function pivot() { return { x: W / 2, y: H * 0.26 }; }
+
+  function positions(y) {
+    const p = pivot();
+    const x1 = p.x + L_PX * Math.sin(y[0]);
+    const b1y = p.y + L_PX * Math.cos(y[0]);
+    const x2 = x1 + L_PX * Math.sin(y[2]);
+    const b2y = b1y + L_PX * Math.cos(y[2]);
+    return { p: p, b1: { x: x1, y: b1y }, b2: { x: x2, y: b2y } };
+  }
+
+  // ---- 鼠标拖拽 ----
+  let dragging = 0; // 0=无 1=摆球1 2=摆球2
+  let mouse = { x: 0, y: 0 };
+
+  function canvasPoint(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+  canvas.addEventListener('mousedown', function (e) {
+    const m = canvasPoint(e);
+    const pos = positions(Y);
+    if (dist(m, pos.b2) < 34) dragging = 2;
+    else if (dist(m, pos.b1) < 30) dragging = 1;
+    if (dragging) {
+      canvas.classList.add('dragging');
+      Y[1] = 0; Y[3] = 0; // 抓取瞬间清零角速度
+      TRAIL_A.length = 0; TRAIL_B.length = 0;
+      e.preventDefault();
+    }
+  });
+  window.addEventListener('mousemove', function (e) {
+    if (!dragging) return;
+    const m = canvasPoint(e);
+    const pos = positions(Y);
+    if (dragging === 1) {
+      Y[0] = Math.atan2(m.x - pos.p.x, m.y - pos.p.y);
+    } else {
+      Y[2] = Math.atan2(m.x - pos.b1.x, m.y - pos.b1.y);
+    }
+    Y[1] = 0; Y[3] = 0;
+  });
+  window.addEventListener('mouseup', function () {
+    if (dragging) {
+      dragging = 0;
+      canvas.classList.remove('dragging');
+      lastTs = null;      // 重新取时基, 避免拖拽期间时间跳变
+      accumulator = 0;
+    }
+  });
+
+  // ================= 右侧子画布: 相图 + 能量柱状图 =================
+  const side = document.getElementById('side');
+  const sctx = side.getContext('2d');
+  const SW = 250, SH = 430;          // CSS 尺寸
+  const PHASE_H = 260;               // 相图区高度
+  side.width = SW * DPR;
+  side.height = SH * DPR;
+  side.style.width = SW + 'px';
+  side.style.height = SH + 'px';
+  sctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  const PHASE = [];
+  const PHASE_MAX = 1600;
+  let wMaxScale = 8;                 // 纵轴自适应量程
+
+  function wrapPi(a) {
+    return ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+  }
+  function phaseXY(th, w) {
+    return {
+      x: SW / 2 + (wrapPi(th) / Math.PI) * (SW / 2 - 14),
+      y: PHASE_H / 2 - (w / wMaxScale) * (PHASE_H / 2 - 14)
+    };
+  }
+  function phaseFromXY(x, y) {
+    return {
+      th: (x - SW / 2) / (SW / 2 - 14) * Math.PI,
+      w: (PHASE_H / 2 - y) / (PHASE_H / 2 - 14) * wMaxScale
+    };
+  }
+
+  function energies() {
+    const l = L_PX / PX_PER_M;
+    const t1 = Y[0], w1 = Y[1], t2 = Y[2], w2 = Y[3];
+    const KE = 0.5 * M1 * l * l * w1 * w1
+             + 0.5 * M2 * (l * l * w1 * w1 + l * l * w2 * w2 + 2 * l * l * w1 * w2 * Math.cos(t1 - t2));
+    // 势能零点取自然下垂静止位, 保证 PE >= 0
+    const PE = (M1 + M2) * G * l * (1 - Math.cos(t1)) + M2 * G * l * (1 - Math.cos(t2));
+    return { KE: Math.max(KE, 0), PE: Math.max(PE, 0) };
+  }
+
+  function drawSide() {
+    sctx.clearRect(0, 0, SW, SH);
+    const { KE, PE } = energies();
+    const E = KE + PE;
+    wMaxScale = Math.max(8, wMaxScale * 0.999, Math.abs(Y[3]) * 1.15);
+
+    // ---- 相图 ----
+    sctx.fillStyle = 'rgba(127, 220, 255, 0.75)';
+    sctx.font = '11px Consolas, monospace';
+    sctx.fillText('相图 PHASE (θ₂, ω₂)', 10, 16);
+
+    // 坐标轴
+    sctx.strokeStyle = 'rgba(127, 220, 255, 0.15)';
+    sctx.lineWidth = 1;
+    sctx.beginPath();
+    sctx.moveTo(14, PHASE_H / 2); sctx.lineTo(SW - 14, PHASE_H / 2);
+    sctx.moveTo(SW / 2, 24); sctx.lineTo(SW / 2, PHASE_H - 8);
+    sctx.stroke();
+    sctx.fillStyle = 'rgba(127, 220, 255, 0.4)';
+    sctx.fillText('θ₂', SW - 24, PHASE_H / 2 - 5);
+    sctx.fillText('ω₂', SW / 2 + 6, 32);
+    sctx.fillText('±' + wMaxScale.toFixed(0), SW - 40, PHASE_H - 10);
+
+    // 轨迹折线 (彩虹渐隐)
+    if (PHASE.length > 1) {
+      sctx.save();
+      sctx.globalCompositeOperation = 'lighter';
+      sctx.lineCap = 'round';
+      let prev = phaseXY(PHASE[0].th, PHASE[0].w);
+      for (let i = 1; i < PHASE.length; i++) {
+        if (Math.abs(PHASE[i].th - PHASE[i - 1].th) > Math.PI) { // 环绕断点不连线
+          prev = phaseXY(PHASE[i].th, PHASE[i].w);
+          continue;
+        }
+        const p = phaseXY(PHASE[i].th, PHASE[i].w);
+        const age = i / PHASE.length;
+        sctx.strokeStyle = 'hsla(' + PHASE[i].hue + ', 100%, 62%, ' + (age * 0.55).toFixed(3) + ')';
+        sctx.lineWidth = 0.6 + age * 1.6;
+        sctx.beginPath();
+        sctx.moveTo(prev.x, prev.y);
+        sctx.lineTo(p.x, p.y);
+        sctx.stroke();
+        prev = p;
+      }
+      sctx.restore();
+    }
+
+    // 当前状态点
+    const cur = phaseXY(Y[2], Y[3]);
+    sctx.fillStyle = '#ffe08a';
+    sctx.shadowColor = '#ffd76a';
+    sctx.shadowBlur = 10;
+    sctx.beginPath();
+    sctx.arc(cur.x, cur.y, 4, 0, Math.PI * 2);
+    sctx.fill();
+    sctx.shadowBlur = 0;
+
+    // ---- 能量柱状图 ----
+    const baseY = SH - 26, barMaxH = 118;
+    sctx.fillStyle = 'rgba(127, 220, 255, 0.75)';
+    sctx.fillText('能量 ENERGY (J)', 10, PHASE_H + 26);
+    energyMax = Math.max(energyMax * 0.9995, KE + PE, 0.5);
+
+    const bars = [
+      { v: KE, c1: '#00e5ff', c2: '#0a5a6a', label: '动能 Ek' },
+      { v: PE, c1: '#ffb347', c2: '#6a4408', label: '势能 Ep' },
+      { v: KE + PE, c1: '#b06bff', c2: '#3a1a6a', label: '总能 E' }
+    ];
+    bars.forEach((b, i) => {
+      const bx = 22 + i * 74;
+      const h = Math.max(2, (b.v / energyMax) * barMaxH);
+      const grad = sctx.createLinearGradient(0, baseY - h, 0, baseY);
+      grad.addColorStop(0, b.c1);
+      grad.addColorStop(1, b.c2);
+      sctx.fillStyle = grad;
+      sctx.shadowColor = b.c1;
+      sctx.shadowBlur = 8;
+      sctx.fillRect(bx, baseY - h, 46, h);
+      sctx.shadowBlur = 0;
+      sctx.fillStyle = 'rgba(200, 230, 255, 0.8)';
+      sctx.fillText(b.label, bx, baseY + 14);
+      sctx.fillStyle = b.c1;
+      sctx.fillText(b.v.toFixed(1), bx + 40 - sctx.measureText(b.v.toFixed(1)).width, baseY - h - 4);
+    });
+    sctx.strokeStyle = 'rgba(127, 220, 255, 0.25)';
+    sctx.beginPath();
+    sctx.moveTo(14, baseY);
+    sctx.lineTo(SW - 14, baseY);
+    sctx.stroke();
+  }
+  let energyMax = 1;
+
+  // ---- 相图拖拽: 直接设定下摆状态 (θ₂, ω₂) ----
+  let phaseDrag = false;
+  function applyPhase(e) {
+    const r = side.getBoundingClientRect();
+    const s = phaseFromXY(e.clientX - r.left, e.clientY - r.top);
+    Y[2] = s.th;
+    Y[3] = Math.max(-wMaxScale, Math.min(wMaxScale, s.w));
+    Y[1] = 0;
+    PHASE.length = 0;
+    TRAIL_A.length = 0; TRAIL_B.length = 0;
+  }
+  side.addEventListener('mousedown', function (e) {
+    const r = side.getBoundingClientRect();
+    if (e.clientY - r.top > PHASE_H) return;   // 仅相图区可拖
+    phaseDrag = true;
+    side.classList.add('dragging');
+    applyPhase(e);
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', function (e) {
+    if (phaseDrag) applyPhase(e);
+  });
+  window.addEventListener('mouseup', function () {
+    if (phaseDrag) {
+      phaseDrag = false;
+      side.classList.remove('dragging');
+      lastTs = null;
+      accumulator = 0;
+    }
+  });
+
+  // ---- 彩虹拖尾渲染 (两球各一条) ----
+  function pushTrail(a, b2) {
+    hueCursor = (hueCursor + 4) % 360;
+    TRAIL_B.push({ x: b2.x, y: b2.y, hue: hueCursor });
+    if (TRAIL_B.length > TRAIL_B_MAX) TRAIL_B.shift();
+    TRAIL_A.push({ x: a.x, y: a.y, hue: (hueCursor + 180) % 360 });
+    if (TRAIL_A.length > TRAIL_A_MAX) TRAIL_A.shift();
+    PHASE.push({ th: Y[2], w: Y[3], hue: hueCursor });
+    if (PHASE.length > PHASE_MAX) PHASE.shift();
+  }
+
+  function drawTrailOne(trail, alphaMax, widthMax) {
+    if (trail.length < 2) return;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    for (let i = 1; i < trail.length; i++) {
+      const age = i / trail.length;               // 0=最老 1=最新
+      ctx.strokeStyle = 'hsla(' + trail[i].hue + ', 100%, 60%, ' + (age * alphaMax).toFixed(3) + ')';
+      ctx.lineWidth = 1 + age * widthMax;
+      ctx.beginPath();
+      ctx.moveTo(trail[i - 1].x, trail[i - 1].y);
+      ctx.lineTo(trail[i].x, trail[i].y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawTrail() {
+    drawTrailOne(TRAIL_A, 0.28, 1.5);   // 上球: 短而朦胧
+    drawTrailOne(TRAIL_B, 0.5, 2.5);    // 下球: 长而明亮
+  }
+
+  // ---- 渲染 ----
+  function pulseAt(tr, dist) {
+    let d = ((dist % tr.total) + tr.total) % tr.total;
+    for (let i = 0; i < tr.segLens.length; i++) {
+      if (d <= tr.segLens[i]) {
+        const a = tr.pts[i], b2 = tr.pts[i + 1];
+        const k = tr.segLens[i] === 0 ? 0 : d / tr.segLens[i];
+        return { x: a.x + (b2.x - a.x) * k, y: a.y + (b2.y - a.y) * k };
+      }
+      d -= tr.segLens[i];
+    }
+    return tr.pts[tr.pts.length - 1];
+  }
+
+  function drawBackground() {
+    ctx.drawImage(bgLayer, 0, 0, W, H);
+    // 动态发光纹路: 电流脉冲沿电路走线奔跑, 头部高亮+彗尾渐隐
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    for (let i = 0; i < PULSES.length; i++) {
+      const p = PULSES[i];
+      p.d += p.sp * wallDt;
+      if (p.d > p.tr.total) p.d -= p.tr.total;
+      const head = pulseAt(p.tr, p.d);
+      const col = p.tr.warm ? '255, 190, 70' : '0, 230, 210';
+      const tailLen = Math.min(26, p.tr.total * 0.4);
+      const tail = pulseAt(p.tr, p.d - tailLen);
+      const grad = ctx.createLinearGradient(tail.x, tail.y, head.x, head.y);
+      grad.addColorStop(0, 'rgba(' + col + ', 0)');
+      grad.addColorStop(1, 'rgba(' + col + ', 0.5)');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(tail.x, tail.y);
+      ctx.lineTo(head.x, head.y);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(' + col + ', 0.85)';
+      ctx.beginPath();
+      ctx.arc(head.x, head.y, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawCeiling(p) {
+    ctx.strokeStyle = '#3a4a6a';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(p.x - 80, p.y);
+    ctx.lineTo(p.x + 80, p.y);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(127, 220, 255, 0.25)';
+    ctx.beginPath();
+    for (let i = -80; i <= 70; i += 15) {
+      ctx.moveTo(p.x + i, p.y);
+      ctx.lineTo(p.x + i + 10, p.y - 12);
+    }
+    ctx.stroke();
+  }
+
+  function drawRod(a, b) {
+    ctx.strokeStyle = '#9ab8d8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+
+  // 火箭点火尾焰 (boostFlash 衰减期间绘制)
+  function drawBoostFlame(b, radius, vx, vy) {
+    if (boostFlash < 0.03) return;
+    const speed = Math.hypot(vx, vy) || 1;
+    const ux = vx / speed, uy = vy / speed;      // 运动方向
+    const len = radius * (2 + boostFlash * 5);
+    const tipX = b.x - ux * len, tipY = b.y - uy * len; // 尾焰指向运动反方向
+    const px = -uy, py = ux;                      // 垂直方向
+    const w = radius * 0.9 * boostFlash + 3;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createLinearGradient(b.x, b.y, tipX, tipY);
+    g.addColorStop(0, 'rgba(255, 240, 160, ' + (0.85 * boostFlash).toFixed(3) + ')');
+    g.addColorStop(0.4, 'rgba(255, 130, 40, ' + (0.55 * boostFlash).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(255, 60, 0, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(b.x + px * w, b.y + py * w);
+    ctx.quadraticCurveTo(tipX, tipY, b.x - px * w, b.y - py * w);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawKobeBob(b, radius) {
+    // 紫金辉光
+    const glow = ctx.createRadialGradient(b.x, b.y, radius * 0.6, b.x, b.y, radius * 3);
+    glow.addColorStop(0, 'rgba(150, 90, 255, 0.4)');
+    glow.addColorStop(0.5, 'rgba(230, 180, 60, 0.12)');
+    glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, radius * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (kobeImg.complete && kobeImg.naturalWidth > 0) {
+      // 圆形裁剪贴头像 (素材本身是居中圆形徽章, 稍微放大让徽章填满圆)
+      const s = radius * 2.55; // 图像边距补偿系数
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, radius, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(kobeImg, b.x - s / 2, b.y - s / 2, s, s);
+      ctx.restore();
+    } else {
+      // 素材未就绪: 回退为发光球
+      const ball = ctx.createRadialGradient(b.x - radius * 0.35, b.y - radius * 0.4, 2, b.x, b.y, radius);
+      ball.addColorStop(0, '#ffe9c8');
+      ball.addColorStop(1, '#5a2d8a');
+      ctx.fillStyle = ball;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 金色描边
+    ctx.strokeStyle = 'rgba(240, 200, 90, 0.9)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  function updateHud() {
+    const d1 = (Y[0] * 180 / Math.PI).toFixed(1);
+    const d2 = (Y[2] * 180 / Math.PI).toFixed(1);
+    const lM = L_PX / PX_PER_M;
+    const v2 = Math.hypot(Y[1] * lM * Math.cos(Y[0]) + Y[3] * lM * Math.cos(Y[2]),
+                          -Y[1] * lM * Math.sin(Y[0]) - Y[3] * lM * Math.sin(Y[2]));
+    hud.innerHTML =
+      '双摆混沌系统 (RK4, h=1/240s)<br>' +
+      '摆长 L = ' + L_PX + ' px | g = ' + G.toFixed(1) + ' | c = ' + DAMP.toFixed(3) + '<br>' +
+      'θ1 = ' + d1 + '° | θ2 = ' + d2 + '°<br>' +
+      '末球速度 |v2| = ' + v2.toFixed(2) + ' m/s<br>' +
+      't = ' + simTime.toFixed(2) + ' s' + ((dragging || phaseDrag) ? ' | 拖拽中…' : '');
+  }
+
+  function frame(ts) {
+    if (lastTs === null) lastTs = ts;
+    let dt = (ts - lastTs) / 1000;
+    lastTs = ts;
+    if (dt > 0.05) dt = 0.05;
+    wallDt = dt;
+
+    if (!dragging && !phaseDrag) {
+      simTime += dt;
+      step(dt);
+    }
+
+    const pos = positions(Y);
+    pushTrail(pos.b1, pos.b2);
+
+    drawBackground();
+    drawCeiling(pos.p);
+    drawTrail();
+    drawRod(pos.p, pos.b1);
+    drawRod(pos.b1, pos.b2);
+    // 尾焰方向 = 各球速度方向
+    const lM = L_PX / PX_PER_M;
+    const v1x = lM * Y[1] * Math.cos(Y[0]), v1y = -lM * Y[1] * Math.sin(Y[0]);
+    const v2x = v1x + lM * Y[3] * Math.cos(Y[2]), v2y = v1y - lM * Y[3] * Math.sin(Y[2]);
+    drawBoostFlame(pos.b1, 20, v1x, v1y);
+    drawBoostFlame(pos.b2, 24, v2x, v2y);
+    drawKobeBob(pos.b1, 20);
+    drawKobeBob(pos.b2, 24);
+    if (boostFlash > 0.03) boostFlash *= Math.pow(0.08, dt); // ~0.25s 熄灭
+    updateHud();
+    drawSide();
+
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

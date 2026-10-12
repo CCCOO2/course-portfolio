@@ -26,12 +26,13 @@
 | 7 | `5171d0b` | 2026-10-12 | `docs(week05): index archived simulations and reflection report in README` | README 产物索引 + 无菌清单更新 |
 | 8 | `beb49e9` | 2026-10-12 | `docs(week05): add repo links, tree and commit baseline to READMEs` | README 仓库链接、完整目录树、基线记录 |
 
-## 阶段三 · 缺陷修复
+## 阶段三 · 缺陷修复与文档完善
 
 | # | 哈希 | 日期 | 提交信息 | 归档内容 |
 |---|------|------|----------|----------|
 | 9 | `4742ad9` | 2026-10-12 | `fix(week05): inline kobe image as base64 to remove broken assets dependency` | 双摆模拟器改用自包含版本（28,041 → 44,451 字节） |
 | 10 | `ab20c4c` | 2026-10-12 | `docs(week05): complete commit-history table and add self-containment check` | 补全提交历史表 + 自包含验证项 |
+| 11 | `667822e` | 2026-10-12 | `docs(week05): extract commit ledger into CHANGELOG.md` | 提交台账拆分至本文件；两份 README 增加 CHANGELOG 入口 |
 
 ---
 
@@ -56,7 +57,7 @@
 | 双摆模拟器可运行 | 浏览器加载 + `evaluate_script` | 标题正确、2 画布、3 滑块、重置／火箭加速按钮齐全、θ 实时变化 |
 | 控制台报错 | 浏览器错误监听 | **0 报错** |
 | 三份 HTML 自包含 | grep `assets/` / `src=` / `new Image` | 外部依赖 0 处 |
-| 工作区纯净独立 | `git status` | 无任何 week05 以外文件变动 |
+| 工作区纯净独立 | `git status` 逐次比对 | 第 1–10 条提交**仅**改动 `week05_pendulum_sim/` 内部文件；第 667822e（本台账拆分之提交）额外更新了根目录 `README.md` 的快捷入口，属跨文件链接同步，未触碰其他周次目录 |
 
 ---
 
@@ -64,4 +65,4 @@
 
 Git 提交哈希由提交内容计算得出，因此**任何文件都无法写入"本次提交自己的"哈希**——就像人没法把自己举起来。
 
-CHANGELOG 的惯用做法恰好化解了这点：每条记录在**下一次**改动时补写。所以本文件当前记录到第 10 条；创建本文件的那次提交将成为第 11 条，由本工作区后续任一次提交补入。实时、无遗漏的完整列表请见文首「提交记录」链接。
+CHANGELOG 的惯用做法恰好化解了这点：每条记录在**下一次**改动时补写。本文件当前已记录至第 11 条（`667822e`）；为本次修订而做的提交将顺位成为第 12 条，由本工作区后续任一次提交补入——台账因此始终只落后一条，并随每次改动自动收敛到完整。实时、无遗漏的列表请见文首「提交记录」链接。
